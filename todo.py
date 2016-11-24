@@ -4,16 +4,17 @@ Usage:
     
     my_program (-i | --interactive)
     my_program (-h | --help | --version)
-    my_program todo <create>
-    my_program todo_open <todo>
-    my_program todo_list_all <todo>
-    my_program todo_item_add <todo>
+    my_program todo_create <todo>...
+    my_program todo_open <todo_name>...
+    my_program todo_list_all <todo_id> <todo_name>
+    my_program todo_item_add <task>
     my_program todo_list_items
     my_program quit 
 
 
 Options:
     -i, --interactive  Interactive Mode
+
     -h, --help  Show this screen and exit.
     
 """
@@ -21,6 +22,7 @@ import sys
 import cmd
 from docopt import docopt, DocoptExit
 import sqlite3 as sq3
+from tabulate import tabulate
 from model import Todo
 
 var = Todo()
@@ -65,23 +67,27 @@ class Todo(cmd.Cmd):
 
 
     @docopt_cmd
-    def do_todo(self, arg):
-    	"""Usage: todo <create> """
-        var.todo_create()
-    
+    def do_todo_create(self, arg):
+    	"""Usage: todo_create <todo>... """
+        var.todo_create(" ".join(arg["<todo>"]))
+
+    @docopt_cmd
     def do_todo_open(self, arg):
-        """Usage: todo <open> """
-        var.todo_open()
+        """Usage: todo_open <todo_name>... """
+        var.todo_open(" ".join(arg["<todo_name>"]))
 
+    @docopt_cmd
     def do_todo_item_add(self, arg):
-        """Usage: todo <add> <item> """
-        var.todo_item_add() 
+        """Usage: todo_item_add  <task> """
+        var.todo_item_add(arg["<task>"]) 
 
+    @docopt_cmd 
     def do_todo_list_all(self, arg):
-        """Usage: todo <list>"""
-        var.todo_list_all()
+        """Usage: todo_list_all <todo_id> <todo_name>"""
+        var.todo_list_all(arg["<todo_id>"], arg["<todo_name>"])
     
-    def do_todo_list_items(self, arg):
+    @docopt_cmd
+    def do_todo_list_items(self):
         """Usage: todo_list_items"""
         var.todo_list_items()
            
