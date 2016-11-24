@@ -1,4 +1,7 @@
 
+from termcolor import cprint 
+
+
 import sqlite3 as sq3
 
 class Todo(object):
@@ -35,52 +38,41 @@ class Todo(object):
 	# 	self._db.execute('SELECT todo_id FROM todo_names')
 	# 	key = self._c.fetchone()
 	
-	def todo_create(self):
-			self.items = str(raw_input(" Todo create : \n"))
-			self._db.execute("INSERT INTO todo_names (todo_name) VALUES (?)", (self.items,))
-			self._db.commit()
-
-
-			
-			print "\n Created: "
-			self._c.execute("SELECT todo_name FROM todo_names")
-			item_name = self._c.fetchall()
-			print item_name[-1][0]
+	def todo_create(self, name):
+		self._db.execute("INSERT INTO todo_names (todo_name) VALUES (?)", (name,))
+		self._db.commit()
+		print("\n Created: ") 
+		self._c.execute("SELECT todo_name FROM todo_names")
+		item_name = self._c.fetchall()
+		print ("Todo:") + item_name[-1][0]
 	
-	def todo_open(self):
-			list_open = str(raw_input("Todo open: "))
-			self._c.execute("SELECT todo_name FROM todo_names ")
-			all_tasks = self._c.fetchall()
+	def todo_open(self, list_name):
+		self._c.execute("SELECT todo_name FROM todo_names ")
+		all_names = self._c.fetchall()
 
-			for task in all_tasks:
-				if list_open  == task[0]:
-					self._db.execute("SELECT task_item FROM todo_tasks WHERE task_id = todo_id")
-					list_opened = self._c.fetchall()
-					print list_opened
-				return "No such list Created."	
+		for name in all_names:
+			if list_name  == name:
+				self._db.execute("SELECT task_item FROM todo_tasks WHERE task_id = todo_id")
+				list_opened = self._c.fetchall()
+				print list_opened
+			return "No such list Created."	
 
-	def todo_item_add(self):
-			self.add_item = raw_input("Add Item? yes/ no \n")
-			
-			if self.add_item == "yes":
-					self.add = str(raw_input("Enter item to add \n")) 
-					self._db.execute("INSERT INTO todo_tasks (task_item) VALUES(?)", (self.add,))
-					self._db.commit()
-
-					print "Added: \n"
-					self._c.execute("SELECT task_item FROM todo_tasks")
-					added_item = self._c.fetchall()
-					print added_item[0][0]
-			else:
-				print "Choose another option"
+	def todo_item_add(self, task):
+		
+			self._db.execute("INSERT INTO todo_tasks (task_item) VALUES(?)", (task,))
+			self._db.commit()
+ 
+			self._c.execute("SELECT task_item FROM todo_tasks")
+			added_item = self._c.fetchall()
+			print "Added: " ,added_item[-1][0]
+		
 
 
 	def todo_list_all(self):
 			print "List All Todo: \n"
-			self._c.execute("SELECT todo_name FROM todo_names")
-			listed = self._c.fetchall()
-			for item in listed:
-				print listed
+			self._c.execute("SELECT * FROM todo_names")
+			listed = self._c.fetchall			
+			print listed
 	
 
 	def todo_list_items(self):
@@ -92,14 +84,14 @@ class Todo(object):
 
 
 
-title = Todo()
-title.title_bar()
-title.todo_create()
-title.todo_open()
-title.todo_item_add()
-title.todo_list_all()
-title.todo_list_items()
-print "Good bye!"
-os.system("clear")
+# title = Todo()
+# title.title_bar()
+# title.todo_create()
+# title.todo_open()
+# title.todo_item_add()
+# title.todo_list_all()
+# title.todo_list_items()
+# print "Good bye!"
+# os.system("clear")
 			
 			
