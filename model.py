@@ -1,100 +1,105 @@
-"""
 
-Usage:
-    
-    my_program (-i | --interactive)
-    my_program (-h | --help | --version)
-    my_program todo <create>
-    my_program todo_open <todo>
-    my_program todo_list_all <todo>
-    my_program todo_item_add <todo>
-    my_program todo_list_items <todo>
-    my_program quit 
-
-
-Options:
-    -i, --interactive  Interactive Mode
-    -h, --help  Show this screen and exit.
-    
-"""
-import sys
-import cmd
-from docopt import docopt, DocoptExit
 import sqlite3 as sq3
-from main import Todo
 
-var = Todo()
-def docopt_cmd(func):
-    """
-    This decorator is used to simplify the try/except block and pass the result
-    of the docopt parsing to the called action.
-    """
-    def fn(self, arg):
-        try:
-            opt = docopt(fn.__doc__, arg)
+class Todo(object):
+	to_do_dict = {}
+	choice = ''
+	
+	
 
-        except DocoptExit as e:
-            # The DocoptExit is thrown when the args do not match.
-            # We print a message to the user and the usage block.
+	def __init__(self):
+		self._db = sq3.connect('todoData.db')
+		self._c = self._db.cursor()
+		self._db.execute('''CREATE TABLE IF NOT EXISTS todo_names
+				(
+					todo_id INTEGER PRIMARY KEY,
+					todo_name TEXT NOT NULL
+				) ''')	
+		self._db.execute('''CREATE TABLE IF NOT EXISTS todo_tasks
+				(
+					task_id INTEGER PRIMARY KEY,
+					todo_id INTEGER,
+					task_item TEXT,
+					FOREIGN KEY(todo_id) REFERENCES todo_names(todo_id)
+				)''')
+		self._db.commit()
 
-            print('Invalid Command!')
-            print(e)
-            return
-
-        except SystemExit:
-            # The SystemExit exception prints the usage for --help
-            # We do not need to do the print here.
-
-            return
-
-        return func(self, opt)
-
-    fn.__name__ = func.__name__
-    fn.__doc__ = func.__doc__
-    fn.__dict__.update(func.__dict__)
-    return fn
-
-class Todo(cmd.Cmd):
-    intro = "\t********************************************** \n" \
-            "\t      ***  To Do Application *** \n"\
-            "\t********************************************** \n" \
-            'Create, Open, Add items and View' \
-        + ' (type help for a list of commands.)'
-    prompt = '(Todo Console) '
-    file = None
+	def title_bar(self):
+		
+		print("\t**********************************************")
+		print("\t      ***  To Do Application ***")
+		print("\t**********************************************")	
+		
+	
+	# def gen_key(self):
+	# 	self._db.execute('SELECT todo_id FROM todo_names')
+	# 	key = self._c.fetchone()
+	
+	def todo_create(self):
+			self.items = str(raw_input(" Todo create : \n"))
+			self._db.execute("INSERT INTO todo_names (todo_name) VALUES (?)", (self.items,))
+			self._db.commit()
 
 
-    @docopt_cmd
-    def do_todo(self, arg):
-    	"""Usage: todo <create> """
-        var.todo_create()
-    
-    def do_todo_open(self, arg):
-        """Usage: todo <open> """
-        var.todo_open()
+			
+			print "\n Created: "
+			self._c.execute("SELECT todo_name FROM todo_names")
+			item_name = self._c.fetchall()
+			print item_name[-1][0]
+	
+	def todo_open(self):
+			list_open = str(raw_input("Todo open: "))
+			self._c.execute("SELECT todo_name FROM todo_names ")
+			all_tasks = self._c.fetchall()
 
-    def do_todo_item_add(self, arg):
-        """Usage: todo <add> <item> """
-        var.todo_item_add() 
+			for task in all_tasks:
+				if list_open  == task[0]:
+					self._db.execute("SELECT task_item FROM todo_tasks WHERE task_id = todo_id")
+					list_opened = self._c.fetchall()
+					print list_opened
+				return "No such list Created."	
 
-    def do_todo_list_all(self, arg):
-        """Usage: todo <list>"""
-        var.todo_list_all()
-    
-    def do_todo_list_items(self, arg):
-        """Usage: todo  """
-        var.todo_list_items()
-           
-    
-    
-    def do_quit(self, arg):
-        """Quits out of Interactive Mode."""
-        print('\nBye Bye! See you soon!\n')
-        exit()
+	def todo_item_add(self):
+			self.add_item = raw_input("Add Item? yes/ no \n")
+			
+			if self.add_item == "yes":
+					self.add = str(raw_input("Enter item to add \n")) 
+					self._db.execute("INSERT INTO todo_tasks (task_item) VALUES(?)", (self.add,))
+					self._db.commit()
 
-opt = docopt(__doc__, sys.argv[1:])
+					print "Added: \n"
+					self._c.execute("SELECT task_item FROM todo_tasks")
+					added_item = self._c.fetchall()
+					print added_item[0][0]
+			else:
+				print "Choose another option"
 
-if __name__ == '__main__':
-    Todo().cmdloop()
 
-print(opt)
+	def todo_list_all(self):
+			print "List All Todo: \n"
+			self._c.execute("SELECT todo_name FROM todo_names")
+			listed = self._c.fetchall()
+			for item in listed:
+				print listed
+	
+
+	def todo_list_items(self):
+			print "List Item In Todo"
+			self._c.execute("SELECT task_item FROM todo_tasks")
+			item_list = self._c.fetchall()
+			print item_list
+
+
+
+
+title = Todo()
+title.title_bar()
+title.todo_create()
+title.todo_open()
+title.todo_item_add()
+title.todo_list_all()
+title.todo_list_items()
+print "Good bye!"
+os.system("clear")
+			
+			
