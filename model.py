@@ -1,30 +1,22 @@
 
 from termcolor import cprint 
-
-
 import sqlite3 as sq3
 
 class Todo(object):
-	to_do_dict = {}
-	choice = ''
+	open_todo = 0 
 	
 	
 
 	def __init__(self):
 		self._db = sq3.connect('todoData.db')
 		self._c = self._db.cursor()
-		self._db.execute('''CREATE TABLE IF NOT EXISTS todo_names
+		self._db.execute('''CREATE TABLE IF NOT EXISTS todo
 				(
-					todo_id INTEGER PRIMARY KEY,
-					todo_name TEXT NOT NULL
-				) ''')	
-		self._db.execute('''CREATE TABLE IF NOT EXISTS todo_tasks
-				(
-					task_id INTEGER PRIMARY KEY,
+					id INTEGER PRIMARY KEY,
 					todo_id INTEGER,
-					task_item TEXT,
-					FOREIGN KEY(todo_id) REFERENCES todo_names(todo_id)
-				)''')
+					todo_name TEXT NOT NULL,
+					task_item TEXT
+				) ''')	
 		self._db.commit()
 
 	def title_bar(self):
@@ -34,64 +26,73 @@ class Todo(object):
 		print("\t**********************************************")	
 		
 	
-	# def gen_key(self):
-	# 	self._db.execute('SELECT todo_id FROM todo_names')
-	# 	key = self._c.fetchone()
+	
 	
 	def todo_create(self, name):
-		self._db.execute("INSERT INTO todo_names (todo_name) VALUES (?)", (name,))
+		self._db.execute("INSERT INTO todo (todo_name) VALUES (?)", (name,))
 		self._db.commit()
-		print("\n Created: ") 
-		self._c.execute("SELECT todo_name FROM todo_names")
-		item_name = self._c.fetchall()
-		print ("Todo:") + item_name[-1][0]
-	
-	def todo_open(self, list_name):
-		self._c.execute("SELECT todo_name FROM todo_names ")
-		all_names = self._c.fetchall()
-
-		for name in all_names:
-			if list_name  == name:
-				self._db.execute("SELECT task_item FROM todo_tasks WHERE task_id = todo_id")
-				list_opened = self._c.fetchall()
-				print list_opened
-			return "No such list Created."	
-
-	def todo_item_add(self, task):
+		print("Created: " +  name) 
 		
-			self._db.execute("INSERT INTO todo_tasks (task_item) VALUES(?)", (task,))
-			self._db.commit()
- 
-			self._c.execute("SELECT task_item FROM todo_tasks")
-			added_item = self._c.fetchall()
-			print "Added: " ,added_item[-1][0]
+	def todo_open(self, list_id):
+		var_open = 1
+		list_id = int(list_id)
+		self._c.execute("SELECT id FROM todo")
+		all_id = self._c.fetchall()
+		ids = [x[0] for x in all_id ]
+		if list_id in ids:
+			self.task = list_id
+		else:
+			print 'Id not available'
+		self._db.commit()	 
+
+		 
 		
+	def item_add(self, item_to_add):
 
+			self._c.execute("SELECT task_item FROM todo WHERE id={}".format(self.task))
+			all_id = self._c.fetchall()
+			if all_id[0][0] != None:
+				tasks = list(all_id[0])
+				if len(tasks) > 0:
+					tasks.append(item_to_add)
+					items = ','.join(tasks)
+					self._db.execute("UPDATE todo SET task_item=? WHERE id = ?", (items, self.task))
+					self._db.commit()
+			else:
+				items = item_to_add
+				self._db.execute("UPDATE todo SET task_item=? WHERE id=? ", (items, self.task))
+				self._db.commit()
 
-	def todo_list_all(self):
-			print "List All Todo: \n"
-			self._c.execute("SELECT * FROM todo_names")
-			listed = self._c.fetchall			
-			print listed
+	def todo_list(self):
+		from prettytable import PrettyTable
+		print "List All Todo: \n"
+		self._c.execute("SELECT todo_name FROM todo")
+		lists = self._c.fetchall()
+		todo_table = PrettyTable(['Todo Name'])
+		for item in lists:
+			todo_table.add_row([str(item[0])])
+		 
+		print todo_table
+
+	def item_list(self, item_name):
+		self._c.execute("SELECT task_item FROM todo")
+		list_item = self._c.fetchall()
+		if type(item_name) == str:
+			print list_item[0][-1]
+		elif type(item_name) == int:
+			print list_item 	
+
+		for item in list_item:
+			if item_id in list_item:
+				self._c.execute("SELECT task_item FROM todo_tasks WHERE item_id = task_id ")
+				todonames = self._c.fetchall()
+				for item in todonames:
+					ll = [item[0], [-1]]
+				print "List Item In Todo"
+			print "Invalid List"	
 	
 
-	def todo_list_items(self):
-			print "List Item In Todo"
-			self._c.execute("SELECT task_item FROM todo_tasks")
-			item_list = self._c.fetchall()
-			print item_list
 
 
 
-
-# title = Todo()
-# title.title_bar()
-# title.todo_create()
-# title.todo_open()
-# title.todo_item_add()
-# title.todo_list_all()
-# title.todo_list_items()
-# print "Good bye!"
-# os.system("clear")
-			
 			
